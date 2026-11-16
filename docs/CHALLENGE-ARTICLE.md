@@ -1,10 +1,7 @@
 # PatchProof: software fixes, with receipts
 
-Submission draft. Replace PUBLIC_VIDEO_URL after the actual public video is
-available, and verify the source repository is public. Do not submit placeholders.
-
 **AWS demo:** temporary deployment, recorded before teardown to limit cost.
-**Demo:** PUBLIC_VIDEO_URL
+**Demo:** https://www.youtube.com/watch?v=qVsiOaKjZ9s
 **Source:** https://github.com/ChrisX101010/patchproof
 
 ## The problem
