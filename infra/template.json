@@ -1,0 +1,48 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "PatchProof evidence workspace. Requires a verified FREE account or explicit temporary metered-demo authorization.",
+  "Parameters": {
+    "ArtifactBucket": {"Type": "String"},
+    "ArtifactKey": {"Type": "String"},
+    "PublisherToken": {"Type": "String", "NoEcho": true, "MinLength": 32}
+  },
+  "Resources": {
+    "ReportBucket": {"Type": "AWS::S3::Bucket", "Properties": {
+      "PublicAccessBlockConfiguration": {"BlockPublicAcls": true, "IgnorePublicAcls": true, "BlockPublicPolicy": true, "RestrictPublicBuckets": true},
+      "BucketEncryption": {"ServerSideEncryptionConfiguration": [{"ServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"}}]},
+      "Tags": [{"Key": "Project", "Value": "PatchProof"}]
+    }},
+    "ReportTable": {"Type": "AWS::DynamoDB::Table", "Properties": {
+      "BillingMode": "PAY_PER_REQUEST",
+      "AttributeDefinitions": [{"AttributeName": "pk", "AttributeType": "S"}, {"AttributeName": "sk", "AttributeType": "S"}],
+      "KeySchema": [{"AttributeName": "pk", "KeyType": "HASH"}, {"AttributeName": "sk", "KeyType": "RANGE"}],
+      "SSESpecification": {"SSEEnabled": true},
+      "Tags": [{"Key": "Project", "Value": "PatchProof"}]
+    }},
+    "FunctionRole": {"Type": "AWS::IAM::Role", "Properties": {
+      "AssumeRolePolicyDocument": {"Version": "2012-10-17", "Statement": [{"Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}]},
+      "Policies": [{"PolicyName": "EvidenceOnly", "PolicyDocument": {"Version": "2012-10-17", "Statement": [
+        {"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject"], "Resource": {"Fn::Sub": "${ReportBucket.Arn}/capsules/*"}},
+        {"Effect": "Allow", "Action": ["dynamodb:Query", "dynamodb:PutItem"], "Resource": {"Fn::GetAtt": ["ReportTable", "Arn"]}},
+        {"Effect": "Allow", "Action": ["logs:CreateLogStream", "logs:PutLogEvents"], "Resource": {"Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}:*"}}
+      ]}}]
+    }},
+    "LogGroup": {"Type": "AWS::Logs::LogGroup", "Properties": {"LogGroupName": {"Fn::Sub": "/aws/lambda/${AWS::StackName}"}, "RetentionInDays": 3}},
+    "Function": {"Type": "AWS::Lambda::Function", "DependsOn": "LogGroup", "Properties": {
+      "FunctionName": {"Ref": "AWS::StackName"}, "Runtime": "python3.13", "Architectures": ["arm64"],
+      "Handler": "lambda_handler.handler", "Role": {"Fn::GetAtt": ["FunctionRole", "Arn"]},
+      "MemorySize": 128, "Timeout": 15,
+      "Code": {"S3Bucket": {"Ref": "ArtifactBucket"}, "S3Key": {"Ref": "ArtifactKey"}},
+      "Environment": {"Variables": {"REPORT_BUCKET": {"Ref": "ReportBucket"}, "REPORT_TABLE": {"Ref": "ReportTable"}, "PUBLISH_TOKEN": {"Ref": "PublisherToken"}}},
+      "Tags": [{"Key": "Project", "Value": "PatchProof"}]
+    }},
+    "FunctionUrl": {"Type": "AWS::Lambda::Url", "Properties": {"TargetFunctionArn": {"Ref": "Function"}, "AuthType": "NONE"}},
+    "PublicUrlPermission": {"Type": "AWS::Lambda::Permission", "Properties": {"FunctionName": {"Ref": "Function"}, "Action": "lambda:InvokeFunctionUrl", "Principal": "*", "FunctionUrlAuthType": "NONE"}},
+    "PublicInvokePermission": {"Type": "AWS::Lambda::Permission", "Properties": {"FunctionName": {"Ref": "Function"}, "Action": "lambda:InvokeFunction", "Principal": "*", "InvokedViaFunctionUrl": true}}
+  },
+  "Outputs": {
+    "Url": {"Value": {"Fn::GetAtt": ["FunctionUrl", "FunctionUrl"]}},
+    "ReportBucket": {"Value": {"Ref": "ReportBucket"}},
+    "ReportTable": {"Value": {"Ref": "ReportTable"}}
+  }
+}

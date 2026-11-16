@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-16",
+  "local": {
+    "status": "PASS",
+    "python": "3.14.0a7",
+    "unit_tests": 23,
+    "skipped": 0,
+    "browser": "PASS",
+    "capsule": "adb27e6f9e44f2924bb12715f37d1390ae82b19095f50a3f762c51cc3b2f3050",
+    "lambda_zip_sha256": "271295db6125fde59227f8113fcd882644d1662d222dcce98170c469734d0f3f",
+    "lambda_zip_bytes": 81459,
+    "cloud": "See separate real-service smoke results"
+  },
+  "cloud": {
+    "status": "PASS",
+    "checks": [
+      "Lambda HTTP",
+      "unauthorized write denied",
+      "S3 publish/read",
+      "DynamoDB report index",
+      "idempotent publication"
+    ]
+  },
+  "cleanup": "DELETED",
+  "recording": {
+    "seconds": 114.56,
+    "sha256": "caf6b947a93e4af0f520445ccfad6d5c82f54a1ada130ae211ef8ad923b51d2c",
+    "review": "Two decoded saved-video frames inspected; duration and SHA256 verified."
+  }
+}

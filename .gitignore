@@ -1,0 +1,14 @@
+.local/
+node_modules/
+.playwright/
+__pycache__/
+*.pyc
+dist/
+artifacts/
+.venv/
+*.pem
+*.key
+publisher-token
+aws-state.json
+.env*
+!*.example

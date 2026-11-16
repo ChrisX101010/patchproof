@@ -1,0 +1,8 @@
+{
+  "name": "patchproof",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Portable test evidence with a serverless home",
+  "scripts": {"test:browser": "node tests/browser.cjs"},
+  "devDependencies": {"@playwright/test": "1.57.0"}
+}
